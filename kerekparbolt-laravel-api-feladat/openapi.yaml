@@ -1,0 +1,480 @@
+openapi: "3.1.0"
+info:
+  title: Kerékpárbolt API
+  version: 1.0.0
+
+servers:
+  - url: http://backend.vm1.test
+    description: VM1 backend
+  - url: http://backend.vm2.test
+    description: VM2 backend
+  - url: http://backend.vm3.test
+    description: VM3 backend
+  - url: http://backend.vm4.test
+    description: VM4 backend
+  - url: http://backend.vm5.test
+    description: VM5 backend
+  - url: http://backend.vm6.test
+    description: VM6 backend
+
+paths:
+  /api/bicycles:
+    get:
+      tags:
+        - Bicycles
+      summary: Kerékpárok listájának lekérése
+      description: |
+        Az `index` visszaadja a kerékpárok adatait a minta szerint.
+      operationId: bicycles.index
+      parameters:
+        - name: sex
+          in: query
+          schema:
+            type: string
+            enum: [férfi, női, unisex]
+
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [MTB, városi, országúti, cross]
+
+      responses:
+        '200':
+          description: Kerékpárok listája
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BicycleResource'
+              example: {"data":[{"id":1,"name":"MTB kerékpár ST 530 S, 27,5”, fekete, piros","wheel_size":27,"gears":9,"sex":"férfi","type":"MTB","size":"S","color":"fekete, piros"},{"id":2,"name":"MTB kerékpár ST 530 S, 27,5”, fekete, piros","wheel_size":27,"gears":9,"sex":"férfi","type":"MTB","size":"M","color":"fekete, piros"},{"id":3,"name":"MTB kerékpár ST 530 S, 27,5”, fekete, piros","wheel_size":27,"gears":9,"sex":"férfi","type":"MTB","size":"L","color":"fekete, piros"}]}
+    post:
+      tags:
+        - Bicycles
+      summary: Új kerékpár létrehozása
+      description: |
+        A `store` feladata, hogy a JSON-ként kapott adatokat validálja, majd eltárolja az adatbázisban.
+        A létrehozott új rekordot adja is vissza a minta szerint.
+
+      operationId: bicycles.store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BicycleRequest'
+            example: {"name":"MTB kerékpár ST 530 S, 27,5”, ezüst, kék","wheel_size":27,"gears":21,"sex":"férfi","type":"MTB","size":"L","color":"ezüst, kék","manufacturer_id":1}
+      responses:
+        '201':
+          description: Kerékpár létrehozva
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BicycleResource'
+              example: {"data":{"id":999,"name":"MTB kerékpár ST 530 S, 27,5”, ezüst, kék","wheel_size":27,"gears":21,"sex":"férfi","type":"MTB","size":"L","color":"ezüst, kék"}}
+        '422':
+          description: Érvénytelen adatok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: object
+              example: {"message":"The given data was invalid.","errors":{"name":["The name field is required."]}}
+
+
+  /api/bicycles/{bicycle}:
+    get:
+      tags:
+        - Bicycles
+      summary: Egy adott kerékpár lekérése
+      description: |
+        A `show` a kerékpár azonosítója alapján keresse meg a megfelelő rekordot, és adja vissza az adatokat a minta szerint.
+      operationId: bicycles.show
+      parameters:
+        - name: bicycle
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 4
+      responses:
+        '200':
+          description: Egy adott kerékpár
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BicycleResource'
+              example: {"data":{"id":4,"name":"MTB kerékpár ST 530 S, 27,5”, fekete, piros","wheel_size":27,"gears":9,"sex":"férfi","type":"MTB","size":"XL","color":"fekete, piros","manufacturer_id":1}}
+        '404':
+          description: Nem található a keresett elem
+    put:
+      tags:
+        - Bicycles
+      summary: Egy adott kerékpár frissítése
+      description: |
+        Az `update` feladata, hogy a JSON-ként kapott adatokat validálja,
+        majd teljes egészében cserélje le az adatbázisban található adatokat.
+
+        A módosított rekordot adja is vissza a minta szerint!
+
+
+      operationId: bicycles.update
+      parameters:
+        - name: bicycle
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 11
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BicycleRequest'
+            example: {"name":"MTB kerékpár ST 530 S, 26”, ezüst","wheel_size":26,"gears":18,"sex":"férfi","type":"MTB","size":"XXL","color":"ezüst","manufacturer_id":4}
+      responses:
+        '200':
+          description: Kerékpár frissítve
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BicycleResource'
+              example: {"data":{"id":11,"name":"MTB kerékpár ST 530 S, 26”, ezüst","wheel_size":26,"gears":18,"sex":"férfi","type":"MTB","size":"XXL","color":"ezüst"}}
+        '422':
+          description: Érvénytelen adatok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: object
+              example: {"message":"The given data was invalid.","errors":{"gears":["The gears must be between 1 and 30."]}}
+        '404':
+          description: Nem található a keresett elem
+    delete:
+      tags:
+        - Bicycles
+      summary: Egy adott kerékpár törlése
+      description: |
+        A `destroy` törölje ki a megfelelő rekordot az adatbázisból az `id` alapján.
+      operationId: bicycles.destroy
+      parameters:
+        - name: bicycle
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 8
+      responses:
+        '204':
+          description: Kerékpár törölve
+        '404':
+          description: Nem található a keresett elem
+        '500':
+          description: Szerver hiba
+
+  /api/manufacturers:
+    get:
+      tags:
+        - Manufacturers
+      summary: Gyártók listájának lekérése
+      description: |
+        Az `index` visszaadja a gyártók adatait a minta szerint.
+      operationId: manufacturers.index
+      responses:
+        '200':
+          description: Gyártók listája
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ManufacturerResource'
+              example: {"data":[{"id":1,"name":"Rockrider","website":"https://www.decathlon.hu/"},{"id":2,"name":"Elops","website":null},{"id":3,"name":"Triban","website":"https://www.decathlon.hu/"}]}
+    post:
+      tags:
+        - Manufacturers
+      summary: Új gyártó létrehozása
+      description: |
+        A `store` feladata, hogy a JSON-ként kapott adatokat validálja, majd eltárolja az adatbázisban.
+      operationId: manufacturers.store
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManufacturerRequest'
+            example: {"name":"Merida","website":"https://www.merida-bikes.com/en-gb"}
+      responses:
+        '201':
+          description: Gyártó létrehozva
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ManufacturerResource'
+              example: {"data":{"id":9999,"name":"Merida","website":"https://www.merida-bikes.com/en-gb"}}
+        '422':
+          description: Érvénytelen adatok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: object
+              example: {"message":"The given data was invalid.","errors":{"name":["The name field is required."]}}
+
+  /api/manufacturers/{manufacturer}:
+    get:
+      tags:
+        - Manufacturers
+      summary: Egy adott gyártó lekérése
+      description: |
+        A `show` a gyártó azonosítója alapján keresse meg a megfelelő rekordot,
+        és adja vissza az adatokat a minta szerint.
+      operationId: manufacturers.show
+      parameters:
+        - name: manufacturer
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 4
+      responses:
+        '200':
+          description: Egy adott gyártó
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ManufacturerResource'
+              example: {"data":{"id":4,"name":"Kruz Bike Company","website":"https://kruzbike.com/"}}
+        '404':
+          description: Nem található a keresett elem
+    put:
+      tags:
+        - Manufacturers
+      summary: Egy adott gyártó frissítése
+      description: |
+        Az `update` feladata, hogy a JSON-ként kapott adatokat validálja,
+        majd teljes egészében cserélje le az adatbázisban található adatokat.
+
+        A módosított rekordot adja is vissza a minta szerint!
+
+      operationId: manufacturers.update
+      parameters:
+        - name: manufacturer
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManufacturerRequest'
+            example: {"name":"Elops","website":"https://www.decathlon.hu/"}
+      responses:
+        '200':
+          description: Gyártó frissítve
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ManufacturerResource'
+              example: {"data":{"id":2,"name":"Elops","website":"https://www.decathlon.hu/"}}
+        '422':
+          description: Érvénytelen adatok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: object
+              example: {"message":"The given data was invalid.","errors":{"name":["The name field is required."]}}
+        '404':
+          description: Nem található a keresett elem
+    delete:
+      tags:
+        - Manufacturers
+      summary: Egy adott gyártó törlése
+      description: |
+        A `destroy` törölje ki a megfelelő rekordot az adatbázisból az `id` alapján.
+      operationId: manufacturers.destroy
+      parameters:
+        - name: manufacturer
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '204':
+          description: Gyártó törölve
+        '404':
+          description: Nem található a keresett elem
+        '500':
+          description: Szerver hiba
+
+components:
+  schemas:
+    ManufacturerResource:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: A gyártó azonosítója
+        name:
+          type: string
+          maxLength: 20
+          description: A gyártó neve
+        website:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Hivatkozás a gyártó weboldalára
+    ManufacturerRequest:
+      type: object
+      description: Gyártó létrehozásához vagy frissítéséhez szükséges adatok
+      properties:
+        name:
+          type: string
+          maxLength: 20
+          description: A gyártó neve
+          example: Merida
+        website:
+          type: string
+          maxLength: 255
+          nullable: true
+          description: Hivatkozás a gyártó weboldalára (opcionális)
+          example: https://www.merida-bikes.com/en-gb
+      required:
+        - name
+
+    BicycleResource:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: A kerékpár azonosítója
+        name:
+          type: string
+          maxLength: 80
+          description: A kerékpár neve
+        wheel_size:
+          type: number
+          format: float
+          description: A kerék mérete
+        gears:
+          type: integer
+          description: A váltó sebesség fokozatainak száma
+        sex:
+          type: string
+          maxLength: 10
+          description: Kiknek tervezték a kerékpárt, értéke férfi, női, vagy unisex lehet
+        type:
+          type: string
+          maxLength: 10
+          description: A kerékpár típusa, értéke MTB, városi, országúti, vagy cross lehet
+        size:
+          type: string
+          maxLength: 10
+          nullable: true
+          description: A kerékpár mérete (opcionális)
+        color:
+          type: string
+          maxLength: 80
+          nullable: true
+          description: A kerékpár színe (opcionális)
+        manufacturer_id:
+          type: integer
+          description: A kerékpár gyártójának azonosítója
+    BicycleRequest:
+      type: object
+      description: Kerékpár létrehozásához vagy frissítéséhez szükséges adatok
+      properties:
+        name:
+          type: string
+          maxLength: 80
+          description: A kerékpár neve
+          example: MTB kerékpár ST 530 S, 27,5”, ezüst, kék
+        wheel_size:
+          type: number
+          format: float
+          description: A kerék mérete
+          example: 27
+        gears:
+          type: integer
+          description: A váltó sebesség fokozatainak száma
+          example: 21
+        sex:
+          type: string
+          maxLength: 10
+          description: Kiknek tervezték a kerékpárt, értéke férfi, női, vagy unisex lehet
+          example: férfi
+        type:
+          type: string
+          maxLength: 10
+          description: A kerékpár típusa, értéke MTB, városi, országúti, vagy cross lehet
+          example: MTB
+        size:
+          type: string
+          maxLength: 10
+          nullable: true
+          description: A kerékpár mérete (opcionális)
+          example: L
+        color:
+          type: string
+          maxLength: 80
+          nullable: true
+          description: A kerékpár színe (opcionális)
+          example: ezüst, kék
+        manufacturer_id:
+          type: integer
+          description: A kerékpár gyártójának azonosítója
+          example: 1
+      required:
+        - name
+        - wheel_size
+        - gears
+        - sex
+        - type
+        - manufacturer_id

@@ -1,0 +1,280 @@
+openapi: "3.1.0"
+info:
+  title: Konferencia API
+  version: 1.0.0
+servers:
+  - url: http://backend.vm1.test
+    description: VM1 backend
+  - url: http://backend.vm2.test
+    description: VM2 backend
+  - url: http://backend.vm3.test
+    description: VM3 backend
+  - url: http://backend.vm4.test
+    description: VM4 backend
+  - url: http://backend.vm5.test
+    description: VM5 backend
+  - url: http://backend.vm6.test
+    description: VM6 backend
+
+paths:
+  /api/registrations:
+    get:
+      summary: Regisztrációk listázása
+      description: |
+        **Listázza ki az összes regisztrációt!**
+      operationId: registrations.index
+      tags:
+        - Registration
+      parameters:
+        - name: orderBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [name, date]
+          description: A rendezés alapjául szolgáló mező
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: A rendezés iránya (növekvő vagy csökkenő)
+      responses:
+        '200':
+          description: Visszaadja az összes regisztrációt a megadott rendezési feltétel szerint, ha van olyan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RegistrationResource'
+                example: {"data":[{"id":1,"name":"Karasi Norbert","vegetarian":false,"date":"2022-02-01","arrived":"08:51:23"},{"id":2,"name":"Ormos Imre","vegetarian":false,"date":"2022-02-02","arrived":"10:20:43"},{"id":3,"name":"Ferenczi Janka","vegetarian":false,"date":"2022-02-02","arrived":"09:37:39"}]}
+
+    post:
+      summary: Új regisztráció létrehozása
+      description: |
+        Validálás után tárolja el a kapott adatokat, majd adja vissza a minta szerint.
+      operationId: registrations.store
+      tags:
+        - Registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: A létrehozott új rekord
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RegistrationResource'
+              examples:
+                example-1:
+                  summary: Lehetséges válasz
+                  value:
+                    data:
+                      id: 571
+                      name: Karasi Norbert
+                      vegetarian: false
+                      date: "2022-02-01"
+                      arrived: "08:51:23"
+        '422':
+          description: |
+            Az adatok validálásának sikertelensége esetén a hibajelzést JSON formátumban adja vissza.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input data
+                  errors:
+                    type: object
+
+  /api/registrations/count:
+    get:
+      summary: Regisztráltak száma
+      description: |
+        Visszaadja a regisztrált felhasználók számát.
+      operationId: registrations.count
+      tags:
+        - Registration
+      responses:
+        '200':
+          description: A regisztrált felhasználók száma
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: integer
+                    example: 268
+
+  /api/registrations/{registration}:
+    get:
+      summary: Megjelenít egyetlen regisztrációt
+      description: |
+        Keresse ki a megfelelő rekordot az adatbázisból az URL-ben kapott azonosító alapján.
+      operationId: registrations.show
+      tags:
+        - Registration
+      parameters:
+        - name: registration
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '200':
+          description: Egy regisztráció megjelenítése
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RegistrationResource'
+                example: {"data":{"id":3,"name":"Ferenczi Janka","vegetarian":false,"date":"2022-02-02","arrived":"09:37:39"}}
+        '404':
+          description: Az elem nem található
+
+    put:
+      summary: Regisztráció frissítése
+      description: |
+        Frissítse a megadott paraméterhez tartozó regisztráció adatait a kapott bemenet alapján.
+      operationId: registrations.update
+      tags:
+        - Registration
+      parameters:
+        - name: registration
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 8
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '200':
+          description: A frissített regisztráció adatai
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RegistrationResource'
+                example: {"data":{"id":8,"name":"Karasi Norbert","vegetarian":false,"date":"2022-02-01","arrived":"08:51:23"}}
+        '404':
+          description: Az elem nem található
+        '422':
+          description: Az adatok validálásának sikertelensége.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input data
+                  errors:
+                    type: object
+
+ 
+    delete:
+      summary: Regisztráció törlése
+      description: |
+        Törölje ki a megfelelő rekordot az adatbázisból az URL-ben kapott azonosító alapján.
+      operationId: registrations.destroy
+      tags:
+        - Registration
+      parameters:
+        - name: registration
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 17
+      responses:
+        '204':
+          description: Sikeres törlés
+        '404':
+          description: Az elem nem található
+        '500':
+          description: Szerver hiba
+
+components:
+  schemas:
+    RegistrationResource:
+      type: object
+      description: Egy regisztráció erőforrás reprezentációja.
+      properties:
+        id:
+          type: integer
+          description: A regisztráció azonosítója
+          example: 571
+        name:
+          type: string
+          maxLength: 40
+          description: A regisztráló neve
+          example: Karasi Norbert
+        vegetarian:
+          type: boolean
+          description: Vegetáriánus étrendet kér-e
+          example: false
+        date:
+          type: string
+          format: date
+          description: Erre a napra szól a regisztráció
+          example: "2022-02-01"
+        arrived:
+          type: string
+          format: time
+          nullable: true
+          description: Az érkezés ideje, ha nem érkezett meg, akkor null
+          example: "08:51:23"
+
+    RegistrationRequest:
+      type: object
+      description: Új vagy frissített regisztráció bemeneti adatai.
+      required:
+        - name
+        - vegetarian
+        - date
+      properties:
+        name:
+          type: string
+          maxLength: 40
+          description: A regisztráló neve
+          example: Karasi Norbert
+        vegetarian:
+          type: boolean
+          description: Vegetáriánus étrendet kér-e
+          example: false
+        date:
+          type: string
+          format: date
+          description: Erre a napra szól a regisztráció
+          example: "2022-02-01"
+        arrived:
+          type: string
+          format: time
+          nullable: true
+          description: Az érkezés ideje, ha nem érkezett meg, akkor null
+          example: "08:51:23"

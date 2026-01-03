@@ -1,0 +1,518 @@
+openapi: "3.0.3"
+info:
+  title: Felhőkarcolók API
+  version: 1.0.0
+  description: API a felhőkarcolók kezeléséhez
+
+servers:
+  - url: http://backend.vm1.test
+    description: VM1 backend
+  - url: http://backend.vm2.test
+    description: VM2 backend
+  - url: http://backend.vm3.test
+    description: VM3 backend
+  - url: http://backend.vm4.test
+    description: VM4 backend
+  - url: http://backend.vm5.test
+    description: VM5 backend
+  - url: http://backend.vm6.test
+    description: VM6 backend
+
+paths:
+  /api/skyscrapers:
+    get:
+      summary: Felhőkarcolók listázása
+      operationId: skyscraper.index
+      tags:
+        - Skyscrapers
+      responses:
+        '200':
+          description: Sikeres lekérdezés
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SkyscraperResource'
+              example:
+                data:
+                  - id: 1
+                    name: Chrysler Building
+                    height: 318.9
+                    stories: 77
+                    finished: 1930
+                    city:
+                      id: 1
+                      country_code: US
+                      name: New York City
+                  - id: 2
+                    name: Empire State Building
+                    height: 381
+                    stories: 102
+                    finished: 1931
+                    city:
+                      id: 1
+                      country_code: US
+                      name: New York City
+    post:
+      summary: Új felhőkarcoló létrehozása
+      operationId: skyscraper.store
+      tags:
+        - Skyscrapers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkyscraperRequest'
+            example:
+              name: MOL torony
+              city_id: 37
+              height: 140
+              stories: 25
+              finished: 2000
+      responses:
+        '201':
+          description: Felhőkarcoló létrehozva
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SkyscraperResource'
+              example:
+                data:
+                  id: 101
+                  name: MOL torony
+                  height: 140
+                  stories: 25
+                  finished: 2000
+                  city:
+                    id: 37
+                    country_code: HU
+                    name: Budapest
+        '422':
+          description: Unprocessable content
+          content:
+            application/json:
+              example: {"message":"The selected city id is invalid.","errors":{"city_id":["The selected city id is invalid."]}}
+        '500':
+          description: Szerver hiba
+  /api/skyscrapers/{skyscraper}:
+    get:
+      summary: Felhőkarcoló lekérdezése azonosító alapján
+      operationId: skyscraper.show
+      tags:
+        - Skyscrapers
+      parameters:
+        - name: skyscraper
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Sikeres lekérdezés
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SkyscraperResource'
+              example:
+                data:
+                  id: 1
+                  name: Chrysler Building
+                  height: 318.9
+                  stories: 77
+                  finished: 1930
+                  city:
+                    id: 1
+                    country_code: US
+                    name: New York City
+        '404':
+          description: Felhőkarcoló nem található
+        '500':
+          description: Szerver hiba
+    put:
+      summary: Felhőkarcoló frissítése
+      operationId: skyscraper.update
+      tags:
+        - Skyscrapers
+      parameters:
+        - name: skyscraper
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 101
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkyscraperRequest'
+            example:
+              name: MOL campus
+              city_id: 37
+              height: 143
+              stories: 28
+              finished: 2022
+      responses:
+        '200':
+          description: Felhőkarcoló frissítve
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SkyscraperResource'
+              example:
+                  data:
+                    id: 101
+                    name: MOL campus
+                    height: 143
+                    stories: 28
+                    finished: 2022
+                    city:
+                      id: 37
+                      country_code: HU
+                      name: Budapest
+        '404':
+          description: Felhőkarcoló nem található
+        '422':
+          description: Unprocessable content
+          content:
+            application/json:
+              example: {"message":"The selected city id is invalid.","errors":{"city_id":["The selected city id is invalid."]}}
+        '500':
+          description: Szerver hiba
+    delete:
+      summary: Felhőkarcoló törlése
+      operationId: skyscraper.destroy
+      tags:
+        - Skyscrapers
+      parameters:
+        - name: skyscraper
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 101
+        # - name: Accept
+        #   in: header
+        #   required: true
+        #   schema:
+        #     type: string
+        #     default: application/json
+      responses:
+        '204':
+          description: Felhőkarcoló törölve
+          # headers:
+          #   Accept:
+          #     schema:
+          #       type: string
+          #       example: application/json
+        '404':
+          description: Felhőkarcoló nem található
+        '500':
+          description: Szerver hiba
+  /api/cities:
+    get:
+      summary: Városok listázása
+      operationId: city.index
+      tags:
+        - Cities
+      responses:
+        '200':
+          description: Sikeres lekérdezés
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CityResource'
+              example:
+                data:
+                  - id: 1
+                    country_code: US
+                    name: New York City
+                    skyscrapers:
+                      - id: 1
+                        name: Chrysler Building
+                        height: 318.9
+                        stories: 77
+                        finished: 1930
+                      - id: 2
+                        name: Empire State Building
+                        height: 381
+                        stories: 102
+                        finished: 1931
+                  - id: 2
+                    country_code: HU
+                    name: Budapest
+                    skyscrapers:
+                      - id: 101
+                        name: MOL torony
+                        height: 140
+                        stories: 25
+                        finished: 2000
+    post:
+      summary: Új város létrehozása
+      operationId: city.store
+      tags:
+        - Cities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CityRequest'
+            example:
+              country_code: HU
+              name: Pécs
+      responses:
+        '201':
+          description: Város létrehozva
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CityResource'
+              example:
+                data:
+                  id: 99
+                  country_code: HU
+                  name: Pécs
+                  skyscrapers: []
+        '422':
+          description: Unprocessable content
+          content:
+            application/json:
+              example: {"message":"The country code field must be 2 characters.","errors":{"country_code":["The country code field must be 2 characters."]}}
+        '500':
+          description: Szerver hiba
+  /api/cities/{city}:
+    get:
+      summary: Város lekérdezése azonosító alapján
+      operationId: city.show
+      tags:
+        - Cities
+      parameters:
+        - name: city
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 37
+      responses:
+        '200':
+          description: Sikeres lekérdezés
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CityResource'
+              example:
+                data:
+                  id: 1
+                  country_code: US
+                  name: New York City
+                  skyscrapers:
+                    - id: 1
+                      name: Chrysler Building
+                      height: 318.9
+                      stories: 77
+                      finished: 1930
+                    - id: 2
+                      name: Empire State Building
+                      height: 381
+                      stories: 102
+                      finished: 1931
+    put:
+      summary: Város frissítése
+      operationId: city.update
+      tags:
+        - Cities
+      parameters:
+        - name: city
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 37
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CityRequest'
+            example:
+              country_code: HU
+              name: Budapest
+      responses:
+        '200':
+          description: Város frissítve
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CityResource'
+              example:
+                data:
+                  id: 2
+                  country_code: HU
+                  name: Budapest
+                  skyscrapers:
+                    - id: 101
+                      name: MOL torony
+                      height: 140
+                      stories: 25
+                      finished: 2000
+        '404':
+          description: Város nem található
+        '422':
+          description: Unprocessable content
+          content:
+            application/json:
+              example: {"message":"The country code field must be 2 characters.","errors":{"country_code":["The country code field must be 2 characters."]}}
+        '500':
+          description: Szerver hiba
+    delete:
+      summary: Város törlése
+      operationId: city.destroy
+      tags:
+        - Cities
+      parameters:
+        - name: city
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Város törölve
+        '404':
+          description: Város nem található
+        '500':
+          description: Szerver hiba
+components:
+  schemas:
+    SkyscraperResource:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+        height:
+          type: number
+          minimum: 140
+          maximum: 1000
+        stories:
+          type: integer
+          minimum: 25
+          maximum: 300
+          nullable: true
+        finished:
+          type: integer
+          minimum: 1900
+          maximum: 3000
+          nullable: true
+        city:
+          $ref: '#/components/schemas/CityResource'
+          nullable: true
+
+    SkyscraperRequest:
+      type: object
+      required:
+        - name
+        - city_id
+        - height
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+        city_id:
+          type: integer
+        height:
+          type: number
+          minimum: 140
+          maximum: 1000
+        stories:
+          type: integer
+          minimum: 25
+          maximum: 300
+          nullable: true
+        finished:
+          type: integer
+          minimum: 1900
+          maximum: 3000
+          nullable: true
+
+    CityResource:
+      type: object
+      properties:
+        id:
+          type: integer
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+        name:
+          type: string
+          maxLength: 25
+        skyscrapers:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkyscraperResource'
+          nullable: true
+
+    CityRequest:
+      type: object
+      required:
+        - country_code
+        - name
+      properties:
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+        name:
+          type: string
+          maxLength: 25

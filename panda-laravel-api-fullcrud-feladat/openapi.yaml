@@ -1,0 +1,256 @@
+openapi: "3.1.0"
+info:
+  title: Panda API
+  version: 1.0.0
+servers:
+  - url: http://backend.vm1.test
+    description: VM1 backend
+  - url: http://backend.vm2.test
+    description: VM2 backend
+  - url: http://backend.vm3.test
+    description: VM3 backend
+  - url: http://backend.vm4.test
+    description: VM4 backend
+  - url: http://backend.vm5.test
+    description: VM5 backend
+  - url: http://backend.vm6.test
+    description: VM6 backend
+
+paths:
+  /api/pandas:
+    get:
+      summary: Pandák listázása
+      description: |
+        **Listázza ki az összes pandát!**
+
+        Az `orderBy` query paraméter határozza meg, hogy mi alapján történjen a rendezés.
+        Csak akkor fogadja el, ha az értéke `name` vagy `age`, különben hagyja figyelmen kívül.
+
+        Az `order` határozza meg a rendezés irányát. Értéke csak `asc` vagy `desc` lehet.
+
+      operationId: pandas.index
+      tags:
+        - Panda
+      parameters:
+        - name: orderBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [name, age]
+          description: A rendezés alapjául szolgáló mező
+        - name: order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: A rendezés iránya (növekvő vagy csökkenő)
+      responses:
+        '200':
+          description: Visszaadja az összes pandát a megadott rendezési feltétel szerint, ha van olyan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PandaResource'
+              example: {"data":[{"id":1,"name":"Bai Yun","sex":"F","birth":null,"age":null},{"id":2,"name":"Bao Bao","sex":"F","birth":"2013-08-23","age":12},{"id":3,"name":"Bei Bei","sex":"M","birth":"2015-08-22","age":10},{"id":4,"name":"Da Mao","sex":"M","birth":"2008-09-01","age":17},{"id":5,"name":"Er Shun","sex":"F","birth":"2007-08-10","age":18},{"id":6,"name":"Gu Gu","sex":"M","birth":"1999-09-25","age":26},{"id":7,"name":"Hua Mei","sex":"F","birth":"1999-08-21","age":26},{"id":8,"name":"Ling Ling","sex":"F","birth":"2014-04-12","age":11},{"id":9,"name":"Jia Yueyue","sex":"F","birth":"2015-10-13","age":10},{"id":10,"name":"Lin Bing","sex":"F","birth":"2009-05-27","age":16},{"id":12,"name":"Lun Lun","sex":"F","birth":"1997-08-25","age":28},{"id":13,"name":"Mei Lan","sex":"M","birth":"2006-09-06","age":19},{"id":14,"name":"Mei Sheng","sex":"M","birth":"2003-08-03","age":22},{"id":15,"name":"Mei Xiang","sex":"F","birth":"1998-07-22","age":27},{"id":16,"name":"Po","sex":"F","birth":"2010-11-03","age":15},{"id":17,"name":"Su Lin","sex":"F","birth":"2005-08-02","age":20},{"id":18,"name":"Tai Shan","sex":"M","birth":"2005-07-09","age":20},{"id":19,"name":"Tian Tian","sex":"M","birth":"1997-08-27","age":28},{"id":20,"name":"Tian Tian","sex":"F","birth":"2003-08-24","age":22},{"id":21,"name":"Wang Wang","sex":"M","birth":"2005-08-31","age":20},{"id":22,"name":"Xi Lan","sex":"M","birth":"2008-08-30","age":17},{"id":23,"name":"Xiao Liwu","sex":"M","birth":"2012-07-29","age":13},{"id":24,"name":"Xian Xian","sex":"F","birth":"2017-06-12","age":8},{"id":25,"name":"Xin Xin","sex":"F","birth":"1990-07-01","age":35},{"id":26,"name":"Yang Yang","sex":"M","birth":"1997-09-09","age":28},{"id":27,"name":"Yang Guang","sex":"M","birth":"2003-08-14","age":22},{"id":28,"name":"Yuan Zai","sex":"F","birth":"2013-07-06","age":12},{"id":29,"name":"Yun Zi","sex":"M","birth":"2009-08-05","age":16}]}
+
+    post:
+      summary: Új panda létrehozása
+      description: |
+        A `store` action feladata, hogy a JSON-ként kapott adatokat validálja, majd eltárolja az adatbázisba.
+        A létrehozott új rekordot adja is vissza a mintának megfelelően!
+
+      operationId: pandas.store
+      tags:
+        - Panda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PandaRequest'
+            examples:
+              example-1:
+                summary: Minta panda létrehozása
+                value: {"name":"Ling Ling","sex":"F","birth":"2015-04-12"}
+      responses:
+        '201':
+          description: A létrehozott új panda rekord
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PandaResource'
+              example: {"data":{"id":30,"name":"Ling Ling","sex":"F","birth":"2015-04-12","age":10}}
+        '422':
+          description: |
+            Az adatok validálásának sikertelensége esetén a hibajelzést JSON formátumban adja vissza.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input data
+                  errors:
+                    type: object
+
+  /api/pandas/{id}:
+    get:
+      summary: Megjelenít egyetlen pandát
+      description: |
+        Keresse ki a megfelelő rekordot az adatbázisból az `id` alapján, és adja vissza a mintának megfelelően.
+      operationId: pandas.show
+      tags:
+        - Panda
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 5
+      responses:
+        '200':
+          description: Egy panda megjelenítése
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PandaResource'
+              example: {"data":{"id":5,"name":"Er Shun","sex":"F","birth":"2007-08-10","age":18}}
+        '404':
+          description: Az elem nem található
+
+    put:
+      summary: Panda adatainak frissítése
+      description: |
+        Frissítse a megadott azonosítójú panda adatait az adatbázisban.
+      operationId: pandas.update
+      tags:
+        - Panda
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 8
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PandaRequest'
+            example: {"name":"Ling Ling","sex":"F","birth":"2014-04-12"}
+      responses:
+        '200':
+          description: A frissített panda rekord
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PandaResource'
+              example: {"data":{"id":8,"name":"Ling Ling","sex":"F","birth":"2014-04-12","age":11}}
+        '422':
+          description: |
+            Az adatok validálásának sikertelensége esetén a hibajelzést JSON formátumban adja vissza.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid input data
+                  errors:
+                    type: object
+        '404':
+          description: Az elem nem található
+
+    delete:
+      summary: Panda törlése
+      description: |
+        Törölje ki a megfelelő panda rekordot az adatbázisból az `id` alapján.
+      operationId: pandas.destroy
+      tags:
+        - Panda
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            default: 11
+      responses:
+        '204':
+          description: Sikeres törlés
+        '404':
+          description: Az elem nem található
+        '500':
+          description: Szerver hiba
+
+components:
+  schemas:
+    PandaResource:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: A panda azonosítója
+        name:
+          type: string
+          maxLength: 10
+          description: A panda neve
+        sex:
+          type: string
+          maxLength: 1
+          description: A panda neme
+          enum:
+            - M
+            - F
+        birth:
+          type: string
+          format: date
+          nullable: true
+          description: A panda születési dátuma
+        age:
+          type: integer
+          nullable: true
+          description: A panda kora években, a mai nap alapján számítva
+    PandaRequest:
+      type: object
+      description: Panda létrehozásához vagy frissítéséhez szükséges adatok
+      properties:
+        name:
+          type: string
+          maxLength: 10
+          description: A panda neve
+          example: Ling Ling
+        sex:
+          type: string
+          maxLength: 1
+          description: A panda neme (`M` vagy `F`)
+          example: F
+        birth:
+          type: string
+          format: date
+          nullable: true
+          description: A panda születési dátuma (opcionális)
+          example: 2015-04-12
+      required:
+        - name
+        - sex
